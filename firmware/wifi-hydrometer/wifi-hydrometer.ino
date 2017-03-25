@@ -2,15 +2,10 @@
 #include <Adafruit_MCP9808.h>
 #include <Adafruit_MMA8451.h>
 
+#include "config.h"
 #include "Ubidots.h"
 
 #define LED_PIN      0
-
-#define WIFI_SSID    "ssid"
-#define WIFI_PASS    "pass"
-
-#define TOKEN        "token"
-#define DEVICE       "hydrometer-1"
 
 #define BATT_VOLT_ID "batt-volt"
 #define TEMP_ID      "temp"
