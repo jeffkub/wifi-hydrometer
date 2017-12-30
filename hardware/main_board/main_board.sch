@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:main_board-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -86,7 +87,7 @@ LIBS:Worldsemi
 LIBS:Xicor
 LIBS:zetex
 LIBS:Zilog
-LIBS:wifi_hydrometer-cache
+LIBS:main_board-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
@@ -322,7 +323,7 @@ GPIO0
 Text Label 8600 2250 0    60   ~ 0
 GPIO15
 $Comp
-L USB_OTG P1
+L USB_OTG-RESCUE-main_board P1
 U 1 1 58B960C2
 P 1200 2350
 F 0 "P1" H 1525 2225 50  0000 C CNN
@@ -1346,7 +1347,7 @@ Wire Wire Line
 Wire Wire Line
 	1450 4100 1350 4200
 Wire Wire Line
-	1350 4400 1350 4200
+	1350 4200 1350 4400
 Wire Wire Line
 	900  4400 1450 4400
 Wire Wire Line
@@ -1360,7 +1361,7 @@ Wire Wire Line
 Wire Wire Line
 	1450 4000 1350 3900
 Wire Wire Line
-	1350 3700 1350 3900
+	1350 3900 1350 3700
 Wire Wire Line
 	900  3700 1450 3700
 Wire Wire Line
