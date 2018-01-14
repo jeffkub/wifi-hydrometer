@@ -800,7 +800,6 @@ F 3 "" H 2750 5600 50  0000 C CNN
 $EndComp
 Text Label 2400 4000 0    60   ~ 0
 VIN
-NoConn ~ 6150 5400
 $Comp
 L +5V #PWR7
 U 1 1 5A47C39D
@@ -1303,4 +1302,7 @@ Wire Wire Line
 	5800 6400 5500 6400
 Wire Wire Line
 	5800 6500 5500 6500
+Wire Wire Line
+	6150 5400 6050 5400
+Connection ~ 6050 5400
 $EndSCHEMATC
