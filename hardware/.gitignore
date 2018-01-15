@@ -19,6 +19,6 @@ _autosave-*
 *.xml
 *.csv
 
-gerbers
+gerber
 
 *-rescue.*
