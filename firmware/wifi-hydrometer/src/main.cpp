@@ -10,18 +10,6 @@
 
 #include "globals.h"
 
-struct sensor_data
-{
-  float bat_v;
-  float temp_f;
-  float accel_x;
-  float accel_y;
-  float accel_z;
-  float light_vis;
-  float light_ir;
-  float light_uv;
-};
-
 static Adafruit_MCP9808 temp_sensor = Adafruit_MCP9808();
 static Adafruit_MMA8451 accel_sensor = Adafruit_MMA8451();
 static Adafruit_SI1145 light_sensor = Adafruit_SI1145();
@@ -34,12 +22,11 @@ RTC_DATA_ATTR unsigned int wifi_conn_fail = 0;
 RTC_DATA_ATTR unsigned int mqtt_conn_fail = 0;
 
 static int init_sensors(void);
-static int read_sensors(struct sensor_data* data);
-static int print_sensor_data(struct sensor_data* data);
+static int read_sensors(JsonObject& data);
 static void wifi_event(system_event_id_t event, system_event_info_t info);
 static int connect_to_wifi(const char* ssid, const char* pass);
 static int connect_to_server(const char* ip, uint16_t port, const char* client_id, const char* user, const char* pass);
-static int publish_sensor_data(const String& topic, struct sensor_data* data);
+static int publish_sensor_data(const String& topic, JsonObject& data);
 
 static int init_sensors(void)
 {
@@ -72,42 +59,33 @@ static int init_sensors(void)
   return 0;
 }
 
-static int read_sensors(struct sensor_data* data)
+static int read_sensors(JsonObject& data)
 {
+  String str_data;
+
   /* Read battery voltage */
-  data->bat_v = analogRead(BAT_SENSE_PIN) * BAT_ADC_SCALE;
+  data["bat_v"] = analogRead(BAT_SENSE_PIN) * BAT_ADC_SCALE;
 
   /* Read temperature sensor */
-  //temp_sensor.wake();
-  data->temp_f = temp_sensor.readTempC() * 9.0f / 5.0f + 32.0f;
-  //temp_sensor.shutdown();
+  temp_sensor.wake();
+  data["temp_f"] = temp_sensor.readTempC() * 9.0f / 5.0f + 32.0f;
+  temp_sensor.shutdown();
 
   /* Read light sensor */
-  data->light_vis = light_sensor.readVisible();
-  data->light_ir = light_sensor.readIR();
-  data->light_uv = light_sensor.readUV() / 100.0f;
+  data["light_vis"] = light_sensor.readVisible();
+  data["light_ir"] = light_sensor.readIR();
+  data["light_uv"] = light_sensor.readUV() / 100.0f;
 
   /* Read accelerometer sensor */
   accel_sensor.read();
-  data->accel_x = accel_sensor.x_g;
-  data->accel_y = accel_sensor.y_g;
-  data->accel_z = accel_sensor.z_g;
+  data["accel_x"] = accel_sensor.x_g;
+  data["accel_y"] = accel_sensor.y_g;
+  data["accel_z"] = accel_sensor.z_g;
 
-  return 0;
-}
-
-static int print_sensor_data(struct sensor_data* data)
-{
   /* Print to console */
-  LOG("Bat  = %.3f\n", data->bat_v);
-  LOG("Temp = %.1f\n", data->temp_f);
-  LOG("X    = %.3f\n", data->accel_x);
-  LOG("Y    = %.3f\n", data->accel_y);
-  LOG("Z    = %.3f\n", data->accel_z);
-  LOG("Vis  = %.0f\n", data->light_vis);
-  LOG("IR   = %.0f\n", data->light_ir);
-  LOG("UV   = %.3f\n", data->light_uv);
-  LOG("Run  = %lu\n", last_run_time);
+  LOG("Sensor data:\n");
+  data.prettyPrintTo(Serial);
+  Serial.println("");
 
   return 0;
 }
@@ -240,24 +218,15 @@ static int connect_to_server(const char* ip, uint16_t port, const char* client_i
   return -1;
 }
 
-static int publish_sensor_data(const String& topic, struct sensor_data* data)
+static int publish_sensor_data(const String& topic, JsonObject& data)
 {
-  DynamicJsonBuffer buffer;
   String payload;
 
-  JsonObject& root = buffer.createObject();
-  root["bat_v"]          = data->bat_v;
-  root["temp_f"]         = data->temp_f;
-  root["accel_x"]        = data->accel_x;
-  root["accel_y"]        = data->accel_y;
-  root["accel_z"]        = data->accel_z;
-  root["light_vis"]      = data->light_vis;
-  root["light_ir"]       = data->light_ir;
-  root["light_uv"]       = data->light_uv;
-  root["wifi_conn_fail"] = wifi_conn_fail;
-  root["mqtt_conn_fail"] = mqtt_conn_fail;
-  root["last_run_time"]  = last_run_time;
-  root.printTo(payload);
+  data["wifi_conn_fail"] = wifi_conn_fail;
+  data["mqtt_conn_fail"] = mqtt_conn_fail;
+  data["last_run_time"]  = last_run_time;
+
+  data.printTo(payload);
 
   LOG("Publishing sensor data\n");
   LOG("  topic:   %s\n", topic.c_str());
@@ -277,7 +246,8 @@ static int publish_sensor_data(const String& topic, struct sensor_data* data)
 
 void setup()
 {
-  struct sensor_data data;
+  DynamicJsonBuffer jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
 
   Serial.begin(115200);
   LOG("Program start\n");
@@ -289,8 +259,7 @@ void setup()
     goto sleep;
   }
 
-  read_sensors(&data);
-  print_sensor_data(&data);
+  read_sensors(root);
 
   digitalWrite(LED_PIN, HIGH);
 
@@ -304,7 +273,7 @@ void setup()
     goto sleep;
   }
 
-  publish_sensor_data(MQTT_TOPIC, &data);
+  publish_sensor_data(MQTT_TOPIC, root);
 
 sleep:
   LOG("Disconnecting\n");
