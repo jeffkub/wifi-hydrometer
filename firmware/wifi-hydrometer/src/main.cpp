@@ -6,7 +6,7 @@
 #include <Adafruit_MMA8451.h>
 #include <Adafruit_SI1145.h>
 #include <ArduinoJson.h>
-#include <PubSubClient.h>
+#include <MQTTClient.h>
 
 #include "globals.h"
 
@@ -26,8 +26,8 @@ static Adafruit_MCP9808 temp_sensor = Adafruit_MCP9808();
 static Adafruit_MMA8451 accel_sensor = Adafruit_MMA8451();
 static Adafruit_SI1145 light_sensor = Adafruit_SI1145();
 
-static WiFiClient esp_client;
-static PubSubClient client(esp_client);
+static WiFiClient net;
+static MQTTClient client(512);
 
 RTC_DATA_ATTR unsigned long last_run_time = 0;
 RTC_DATA_ATTR unsigned int wifi_conn_fail = 0;
@@ -39,7 +39,7 @@ static int print_sensor_data(struct sensor_data* data);
 static void wifi_event(system_event_id_t event, system_event_info_t info);
 static int connect_to_wifi(const char* ssid, const char* pass);
 static int connect_to_server(const char* ip, uint16_t port, const char* client_id, const char* user, const char* pass);
-static int publish_sensor_data(const char* topic, struct sensor_data* data);
+static int publish_sensor_data(const String& topic, struct sensor_data* data);
 
 static int init_sensors(void)
 {
@@ -225,13 +225,13 @@ static int connect_to_server(const char* ip, uint16_t port, const char* client_i
   {
     LOG("Connecting to MQTT server\n");
 
-    client.setServer(ip, port);
+    client.begin(ip, port, net);
     if(client.connect(client_id, user, pass))
     {
       return 0;
     }
 
-    LOG("failed, status code = %d\n", client.state());
+    LOG("failed. lastError = %d\n", client.lastError());
     mqtt_conn_fail++;
 
     delay(5000);
@@ -240,32 +240,32 @@ static int connect_to_server(const char* ip, uint16_t port, const char* client_i
   return -1;
 }
 
-static int publish_sensor_data(const char* topic, struct sensor_data* data)
+static int publish_sensor_data(const String& topic, struct sensor_data* data)
 {
   DynamicJsonBuffer buffer;
   String payload;
 
   JsonObject& root = buffer.createObject();
-  root["batv"]          = data->bat_v;
-  root["tempf"]         = data->temp_f;
-  //root["accelx"]        = data->accel_x;
-  //root["accely"]        = data->accel_y;
-  //root["accelz"]        = data->accel_z;
-  //root["lightvis"]      = data->light_vis;
-  //root["lightir"]       = data->light_ir;
-  //root["lightuv"]       = data->light_uv;
-  root["wificonnfail"] = wifi_conn_fail;
-  root["mqttconnfail"] = mqtt_conn_fail;
-  root["lastruntime"]  = last_run_time;
+  root["bat_v"]          = data->bat_v;
+  root["temp_f"]         = data->temp_f;
+  root["accel_x"]        = data->accel_x;
+  root["accel_y"]        = data->accel_y;
+  root["accel_z"]        = data->accel_z;
+  root["light_vis"]      = data->light_vis;
+  root["light_ir"]       = data->light_ir;
+  root["light_uv"]       = data->light_uv;
+  root["wifi_conn_fail"] = wifi_conn_fail;
+  root["mqtt_conn_fail"] = mqtt_conn_fail;
+  root["last_run_time"]  = last_run_time;
   root.printTo(payload);
 
   LOG("Publishing sensor data\n");
-  LOG("  topic:   %s\n", topic);
+  LOG("  topic:   %s\n", topic.c_str());
   LOG("  payload: %s\n", payload.c_str());
 
-  if(!client.publish(topic, payload.c_str()))
+  if(!client.publish(topic, payload))
   {
-    LOG("failed\n");
+    LOG("failed. lastError = %d\n", client.lastError());
     return -1;
   }
 
