@@ -2,22 +2,21 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define WIFI_SSID       "ssid"
-#define WIFI_PASS       "password"
+#define WIFI_SSID         "ssid"
+#define WIFI_PASS         "password"
 
-#define MQTT_SERVER     "mqtt://things.ubidots.com"
-#define MQTT_PORT       1883
-#define MQTT_CLIENT_ID  "sensor1"
-#define MQTT_USER       ""
-#define MQTT_PASS       ""
-#define MQTT_TOPIC      "/v1.6/devices/sensor1"
+#define MQTT_SERVER       "things.ubidots.com"
+#define MQTT_PORT         1883
+#define MQTT_USER         ""
+#define MQTT_PASS         ""
+#define MQTT_TOPIC_BASE   "/v1.6/devices/"
 
 /* Pin definitions */
-#define LED_PIN         13
-#define SCL_PIN         22
-#define SDA_PIN         23
-#define USB_SENSE_PIN   34
-#define BAT_SENSE_PIN   35
+#define LED_PIN           13
+#define SCL_PIN           22
+#define SDA_PIN           23
+#define USB_SENSE_PIN     34
+#define BAT_SENSE_PIN     35
 
 /* ADC conversion constant */
 #define BAT_ADC_SCALE ((1.1f / 4095.0f) * ((220.0f + 1000.0f) / 220.0f))

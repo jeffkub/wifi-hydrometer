@@ -17,6 +17,8 @@ static Adafruit_SI1145 light_sensor = Adafruit_SI1145();
 static WiFiClient net;
 static MQTTClient client(512);
 
+static DynamicJsonBuffer json_buffer;
+
 RTC_DATA_ATTR unsigned long last_run_time = 0;
 RTC_DATA_ATTR unsigned int wifi_conn_fail = 0;
 RTC_DATA_ATTR unsigned int mqtt_conn_fail = 0;
@@ -24,9 +26,9 @@ RTC_DATA_ATTR unsigned int mqtt_conn_fail = 0;
 static int init_sensors(void);
 static int read_sensors(JsonObject& data);
 static void wifi_event(system_event_id_t event, system_event_info_t info);
-static int connect_to_wifi(const char* ssid, const char* pass);
-static int connect_to_server(const char* ip, uint16_t port, const char* client_id, const char* user, const char* pass);
-static int publish_sensor_data(const String& topic, JsonObject& data);
+static int connect_to_wifi(const String& ssid, const String& pass);
+static int connect_to_server(const String& ip, uint16_t port, const String& client_id, const String& user, const String& pass);
+static int publish_data(const String& topic, JsonObject& data);
 
 static int init_sensors(void)
 {
@@ -61,8 +63,6 @@ static int init_sensors(void)
 
 static int read_sensors(JsonObject& data)
 {
-  String str_data;
-
   /* Read battery voltage */
   data["bat_v"] = analogRead(BAT_SENSE_PIN) * BAT_ADC_SCALE;
 
@@ -170,7 +170,7 @@ static void wifi_event(system_event_id_t event, system_event_info_t info)
   return;
 }
 
-static int connect_to_wifi(const char* ssid, const char* pass)
+static int connect_to_wifi(const String& ssid, const String& pass)
 {
   int retry;
 
@@ -180,7 +180,7 @@ static int connect_to_wifi(const char* ssid, const char* pass)
   {
     LOG("Connecting to %s\n", ssid);
 
-    WiFi.begin(ssid, pass);
+    WiFi.begin(ssid.c_str(), pass.c_str());
     if(WiFi.waitForConnectResult() == WL_CONNECTED)
     {
       return 0;
@@ -195,7 +195,7 @@ static int connect_to_wifi(const char* ssid, const char* pass)
   return -1;
 }
 
-static int connect_to_server(const char* ip, uint16_t port, const char* client_id, const char* user, const char* pass)
+static int connect_to_server(const String& ip, uint16_t port, const String& client_id, const String& user, const String& pass)
 {
   int retry;
 
@@ -203,8 +203,8 @@ static int connect_to_server(const char* ip, uint16_t port, const char* client_i
   {
     LOG("Connecting to MQTT server\n");
 
-    client.begin(ip, port, net);
-    if(client.connect(client_id, user, pass))
+    client.begin(ip.c_str(), port, net);
+    if(client.connect(client_id.c_str(), user.c_str(), pass.c_str()))
     {
       return 0;
     }
@@ -218,7 +218,7 @@ static int connect_to_server(const char* ip, uint16_t port, const char* client_i
   return -1;
 }
 
-static int publish_sensor_data(const String& topic, JsonObject& data)
+static int publish_data(const String& topic, JsonObject& data)
 {
   String payload;
 
@@ -246,8 +246,7 @@ static int publish_sensor_data(const String& topic, JsonObject& data)
 
 void setup()
 {
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
+  JsonObject& sensor_data = json_buffer.createObject();
 
   Serial.begin(115200);
   LOG("Program start\n");
@@ -259,7 +258,10 @@ void setup()
     goto sleep;
   }
 
-  read_sensors(root);
+  if(read_sensors(sensor_data))
+  {
+    goto sleep;
+  }
 
   digitalWrite(LED_PIN, HIGH);
 
@@ -268,12 +270,12 @@ void setup()
     goto sleep;
   }
 
-  if(connect_to_server(MQTT_SERVER, MQTT_PORT, MQTT_CLIENT_ID, MQTT_USER, MQTT_PASS))
+  if(connect_to_server(MQTT_SERVER, MQTT_PORT, WiFi.macAddress(), MQTT_USER, MQTT_PASS))
   {
     goto sleep;
   }
 
-  publish_sensor_data(MQTT_TOPIC, root);
+  publish_data(MQTT_TOPIC_BASE + WiFi.macAddress(), sensor_data);
 
 sleep:
   LOG("Disconnecting\n");
@@ -286,7 +288,6 @@ sleep:
 
   LOG("Going to sleep\n");
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP_US);
-
   last_run_time = micros();
   esp_deep_sleep_start();
 
