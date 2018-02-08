@@ -18,6 +18,8 @@
 #define USB_SENSE_PIN     34
 #define BAT_SENSE_PIN     35
 
+#define LED_CH            0
+
 /* ADC conversion constant */
 #define BAT_ADC_SCALE ((1.1f / 4095.0f) * ((220.0f + 1000.0f) / 220.0f))
 

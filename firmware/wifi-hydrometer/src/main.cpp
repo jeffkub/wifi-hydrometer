@@ -51,6 +51,7 @@ static int init_sensors(void)
   }
 
   accel_sensor.setRange(MMA8451_RANGE_2_G);
+  accel_sensor.setDataRate(MMA8451_DATARATE_1_56_HZ);
 
   if(!light_sensor.begin())
   {
@@ -63,6 +64,8 @@ static int init_sensors(void)
 
 static int read_sensors(JsonObject& data)
 {
+  float mag;
+
   /* Read battery voltage */
   data["bat_v"] = analogRead(BAT_SENSE_PIN) * BAT_ADC_SCALE;
 
@@ -75,12 +78,17 @@ static int read_sensors(JsonObject& data)
   data["light_vis"] = light_sensor.readVisible();
   data["light_ir"] = light_sensor.readIR();
   data["light_uv"] = light_sensor.readUV() / 100.0f;
+  /* TODO: Low power mode */
 
   /* Read accelerometer sensor */
   accel_sensor.read();
   data["accel_x"] = accel_sensor.x_g;
   data["accel_y"] = accel_sensor.y_g;
   data["accel_z"] = accel_sensor.z_g;
+  /* TODO: Put into standby mode */
+
+  mag = sqrt(accel_sensor.x_g*accel_sensor.x_g + accel_sensor.y_g*accel_sensor.y_g + accel_sensor.z_g*accel_sensor.z_g);
+  data["tilt"] = (M_PI_2 - acos(accel_sensor.y_g / mag)) * (180.0f / M_PI);
 
   /* Print to console */
   LOG("Sensor data:\n");
@@ -251,7 +259,8 @@ void setup()
   Serial.begin(115200);
   LOG("Program start\n");
 
-  pinMode(LED_PIN, OUTPUT);
+  ledcAttachPin(LED_PIN, LED_CH);
+  ledcSetup(LED_CH, 12000, 8);
 
   if(init_sensors())
   {
@@ -263,7 +272,7 @@ void setup()
     goto sleep;
   }
 
-  digitalWrite(LED_PIN, HIGH);
+  ledcWrite(LED_CH, 16);
 
   if(connect_to_wifi(WIFI_SSID, WIFI_PASS))
   {
@@ -284,7 +293,7 @@ sleep:
   WiFi.disconnect(true);
   delay(2000);
 
-  digitalWrite(LED_PIN, LOW);
+  ledcWrite(LED_CH, 0);
 
   LOG("Going to sleep\n");
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP_US);
