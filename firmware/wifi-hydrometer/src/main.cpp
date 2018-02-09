@@ -3,15 +3,15 @@
 #include <Wire.h>
 
 #include <Adafruit_MCP9808.h>
-#include <Adafruit_MMA8451.h>
 #include <Adafruit_SI1145.h>
 #include <ArduinoJson.h>
 #include <MQTTClient.h>
 
 #include "globals.h"
+#include "mma8451.h"
 
 static Adafruit_MCP9808 temp_sensor = Adafruit_MCP9808();
-static Adafruit_MMA8451 accel_sensor = Adafruit_MMA8451();
+static MMA8451 accel_sensor = MMA8451();
 static Adafruit_SI1145 light_sensor = Adafruit_SI1145();
 
 static WiFiClient net;
@@ -23,14 +23,14 @@ RTC_DATA_ATTR unsigned long last_run_time = 0;
 RTC_DATA_ATTR unsigned int wifi_conn_fail = 0;
 RTC_DATA_ATTR unsigned int mqtt_conn_fail = 0;
 
-static int init_sensors(void);
-static int read_sensors(JsonObject& data);
-static void wifi_event(system_event_id_t event, system_event_info_t info);
-static int connect_to_wifi(const String& ssid, const String& pass);
-static int connect_to_server(const String& ip, uint16_t port, const String& client_id, const String& user, const String& pass);
-static int publish_data(const String& topic, JsonObject& data);
+static int initSensors(void);
+static int readSensors(JsonObject& data);
+static void wifiEvent(system_event_id_t event, system_event_info_t info);
+static int connectToWiFi(const String& ssid, const String& pass);
+static int connectToServer(const String& ip, uint16_t port, const String& client_id, const String& user, const String& pass);
+static int publishData(const String& topic, JsonObject& data);
 
-static int init_sensors(void)
+static int initSensors(void)
 {
   analogSetWidth(12);
   analogSetAttenuation(ADC_0db);
@@ -50,9 +50,6 @@ static int init_sensors(void)
     return -1;
   }
 
-  accel_sensor.setRange(MMA8451_RANGE_2_G);
-  accel_sensor.setDataRate(MMA8451_DATARATE_1_56_HZ);
-
   if(!light_sensor.begin())
   {
     LOG("Failed to init SI1145\n");
@@ -62,7 +59,7 @@ static int init_sensors(void)
   return 0;
 }
 
-static int read_sensors(JsonObject& data)
+static int readSensors(JsonObject& data)
 {
   float mag;
 
@@ -81,11 +78,14 @@ static int read_sensors(JsonObject& data)
   /* TODO: Low power mode */
 
   /* Read accelerometer sensor */
+  accel_sensor.wake();
+  delay(500);
   accel_sensor.read();
+  accel_sensor.shutdown();
+
   data["accel_x"] = accel_sensor.x_g;
   data["accel_y"] = accel_sensor.y_g;
   data["accel_z"] = accel_sensor.z_g;
-  /* TODO: Put into standby mode */
 
   mag = sqrt(accel_sensor.x_g*accel_sensor.x_g + accel_sensor.y_g*accel_sensor.y_g + accel_sensor.z_g*accel_sensor.z_g);
   data["tilt"] = (M_PI_2 - acos(accel_sensor.y_g / mag)) * (180.0f / M_PI);
@@ -98,7 +98,7 @@ static int read_sensors(JsonObject& data)
   return 0;
 }
 
-static void wifi_event(system_event_id_t event, system_event_info_t info)
+static void wifiEvent(system_event_id_t event, system_event_info_t info)
 {
   switch(event)
   {
@@ -178,11 +178,11 @@ static void wifi_event(system_event_id_t event, system_event_info_t info)
   return;
 }
 
-static int connect_to_wifi(const String& ssid, const String& pass)
+static int connectToWiFi(const String& ssid, const String& pass)
 {
   int retry;
 
-  WiFi.onEvent(wifi_event);
+  WiFi.onEvent(wifiEvent);
 
   for(retry = 0; retry < 3; retry++)
   {
@@ -203,7 +203,7 @@ static int connect_to_wifi(const String& ssid, const String& pass)
   return -1;
 }
 
-static int connect_to_server(const String& ip, uint16_t port, const String& client_id, const String& user, const String& pass)
+static int connectToServer(const String& ip, uint16_t port, const String& client_id, const String& user, const String& pass)
 {
   int retry;
 
@@ -226,7 +226,7 @@ static int connect_to_server(const String& ip, uint16_t port, const String& clie
   return -1;
 }
 
-static int publish_data(const String& topic, JsonObject& data)
+static int publishData(const String& topic, JsonObject& data)
 {
   String payload;
 
@@ -262,29 +262,29 @@ void setup()
   ledcAttachPin(LED_PIN, LED_CH);
   ledcSetup(LED_CH, 12000, 8);
 
-  if(init_sensors())
+  if(initSensors())
   {
     goto sleep;
   }
 
-  if(read_sensors(sensor_data))
+  if(readSensors(sensor_data))
   {
     goto sleep;
   }
 
   ledcWrite(LED_CH, 16);
 
-  if(connect_to_wifi(WIFI_SSID, WIFI_PASS))
+  if(connectToWiFi(WIFI_SSID, WIFI_PASS))
   {
     goto sleep;
   }
 
-  if(connect_to_server(MQTT_SERVER, MQTT_PORT, WiFi.macAddress(), MQTT_USER, MQTT_PASS))
+  if(connectToServer(MQTT_SERVER, MQTT_PORT, WiFi.macAddress(), MQTT_USER, MQTT_PASS))
   {
     goto sleep;
   }
 
-  publish_data(MQTT_TOPIC_BASE + WiFi.macAddress(), sensor_data);
+  publishData(MQTT_TOPIC_BASE + WiFi.macAddress(), sensor_data);
 
 sleep:
   LOG("Disconnecting\n");
