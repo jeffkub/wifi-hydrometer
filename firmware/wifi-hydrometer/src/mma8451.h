@@ -83,10 +83,10 @@ public:
     float z_g;
 
 private:
-    void writeReg8(uint8_t reg, uint8_t value);
-    uint8_t readReg8(uint8_t reg);
+    void write8(uint8_t reg, uint8_t value);
+    uint8_t read8(uint8_t reg);
 
     uint8_t _i2caddr;
 };
 
-#endif /*#define  _mma8451_h_ */
+#endif /* #ifndef _mma8451_h_ */

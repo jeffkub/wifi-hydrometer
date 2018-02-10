@@ -4,7 +4,7 @@
 
 #define DIVIDER 4096.0f
 
-void MMA8451::writeReg8(uint8_t reg, uint8_t value)
+void MMA8451::write8(uint8_t reg, uint8_t value)
 {
     Wire.beginTransmission(_i2caddr);
     Wire.write(reg);
@@ -14,7 +14,7 @@ void MMA8451::writeReg8(uint8_t reg, uint8_t value)
     return;
 }
 
-uint8_t MMA8451::readReg8(uint8_t reg)
+uint8_t MMA8451::read8(uint8_t reg)
 {
     Wire.beginTransmission(_i2caddr);
     Wire.write(reg);
@@ -37,24 +37,24 @@ bool MMA8451::begin(uint8_t addr)
     _i2caddr = addr;
 
     /* Check connection */
-    device_id = readReg8(MMA8451_WHOAMI);
+    device_id = read8(MMA8451_WHOAMI);
     if(device_id != MMA8451_WHOAMI_DEVID)
     {
         return false;
     }
 
     /* Reset device */
-    writeReg8(MMA8451_CTRL_REG2, MMA8451_CTRL_REG2_RST);
-    while(readReg8(MMA8451_CTRL_REG2) & MMA8451_CTRL_REG2_RST);
+    write8(MMA8451_CTRL_REG2, MMA8451_CTRL_REG2_RST);
+    while(read8(MMA8451_CTRL_REG2) & MMA8451_CTRL_REG2_RST);
 
     /* Enable 2G range */
-    writeReg8(MMA8451_XYZ_DATA_CFG,
+    write8(MMA8451_XYZ_DATA_CFG,
         MMA8451_XYZ_DATA_CFG_FS(MMA8451_RANGE_2_G));
     /* High resolution oversampling mode */
-    writeReg8(MMA8451_CTRL_REG2,
+    write8(MMA8451_CTRL_REG2,
         MMA8451_CTRL_REG2_MODS(MMA8451_MODS_HIGH_RESOLUTION));
     /* Set data rate, low noise mode */
-    writeReg8(MMA8451_CTRL_REG1,
+    write8(MMA8451_CTRL_REG1,
         MMA8451_CTRL_REG1_DR(MMA8451_DATARATE_6_25HZ) |
         MMA8451_CTRL_REG1_LNOISE);
 
@@ -65,9 +65,9 @@ void MMA8451::wake(void)
 {
     uint8_t reg;
 
-    reg = readReg8(MMA8451_CTRL_REG1);
+    reg = read8(MMA8451_CTRL_REG1);
     reg |= MMA8451_CTRL_REG1_ACTIVE;
-    writeReg8(MMA8451_CTRL_REG1, reg);
+    write8(MMA8451_CTRL_REG1, reg);
 
     return;
 }
@@ -76,9 +76,9 @@ void MMA8451::shutdown(void)
 {
     uint8_t reg;
 
-    reg = readReg8(MMA8451_CTRL_REG1);
+    reg = read8(MMA8451_CTRL_REG1);
     reg &= ~MMA8451_CTRL_REG1_ACTIVE;
-    writeReg8(MMA8451_CTRL_REG1, reg);
+    write8(MMA8451_CTRL_REG1, reg);
 
     return;
 }
