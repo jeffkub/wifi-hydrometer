@@ -3,37 +3,49 @@
 
 #include <Arduino.h>
 
-#define MCP9808_I2CADDR_DEFAULT        0x18
-#define MCP9808_REG_CONFIG             0x01
+#define MCP9808_DEFAULT_ADDRESS         0x18
 
-#define MCP9808_REG_CONFIG_SHUTDOWN    0x0100
-#define MCP9808_REG_CONFIG_CRITLOCKED  0x0080
-#define MCP9808_REG_CONFIG_WINLOCKED   0x0040
-#define MCP9808_REG_CONFIG_INTCLR      0x0020
-#define MCP9808_REG_CONFIG_ALERTSTAT   0x0010
-#define MCP9808_REG_CONFIG_ALERTCTRL   0x0008
-#define MCP9808_REG_CONFIG_ALERTSEL    0x0004
-#define MCP9808_REG_CONFIG_ALERTPOL    0x0002
-#define MCP9808_REG_CONFIG_ALERTMODE   0x0001
+#define MCP9808_CONFIG                  0x01
+#define MCP9808_UPPER_TEMP              0x02
+#define MCP9808_LOWER_TEMP              0x03
+#define MCP9808_CRIT_TEMP               0x04
+#define MCP9808_AMBIENT_TEMP            0x05
+#define MCP9808_MANUF                   0x06
+#define MCP9808_DEV                     0x07
 
-#define MCP9808_REG_UPPER_TEMP         0x02
-#define MCP9808_REG_LOWER_TEMP         0x03
-#define MCP9808_REG_CRIT_TEMP          0x04
-#define MCP9808_REG_AMBIENT_TEMP       0x05
-#define MCP9808_REG_MANUF_ID           0x06
-#define MCP9808_REG_DEVICE_ID          0x07
+#define MCP9808_CONFIG_ALERTMOD         (1 << 0)
+#define MCP9808_CONFIG_ALERTPOL         (1 << 1)
+#define MCP9808_CONFIG_ALERTSEL         (1 << 2)
+#define MCP9808_CONFIG_ALERTCNT         (1 << 3)
+#define MCP9808_CONFIG_ALERTSTAT        (1 << 4)
+#define MCP9808_CONFIG_INTCLR           (1 << 5)
+#define MCP9808_CONFIG_WINLOCK          (1 << 6)
+#define MCP9808_CONFIG_CRITLOCK         (1 << 7)
+#define MCP9808_CONFIG_SHDN             (1 << 8)
+
+#define MCP9808_AMBIENT_TEMP_SIGN       (1 << 12)
+#define MCP9808_AMBIENT_TEMP_MASK       (0x0FFF)
+
+#define MCP9808_MANUF_ID                (0x0054)
+
+#define MCP9808_DEV_ID                  (0x04 << 8)
+#define MCP9808_DEV_ID_MASK             (0xFF << 8)
+#define MCP9808_DEV_REV_MASK            (0xFF << 0)
 
 class MCP9808
 {
 public:
     MCP9808(void);
 
-    bool begin(uint8_t addr = MCP9808_I2CADDR_DEFAULT);
+    bool begin(uint8_t addr = MCP9808_DEFAULT_ADDRESS);
 
     void wake(void);
     void shutdown(void);
 
-    float readTempF(void);
+    void read(void);
+
+    float temp_c;
+    float temp_f;
 
 private:
     void write16(uint8_t reg, uint16_t value);

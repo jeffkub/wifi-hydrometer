@@ -69,6 +69,9 @@ void MMA8451::wake(void)
     reg |= MMA8451_CTRL_REG1_ACTIVE;
     write8(MMA8451_CTRL_REG1, reg);
 
+    /* Wait for valid data */
+    delay(500);
+
     return;
 }
 
