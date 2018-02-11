@@ -29,17 +29,16 @@ uint16_t MCP9808::read16(uint8_t reg)
     return value;
 }
 
-MCP9808::MCP9808(void)
+MCP9808::MCP9808(uint8_t addr) :
+    _i2caddr(addr)
 {
     return;
 }
 
-bool MCP9808::begin(uint8_t addr)
+bool MCP9808::begin(void)
 {
     uint16_t manuf_id;
     uint16_t dev_id;
-
-    _i2caddr = addr;
 
     /* Verify device */
     manuf_id = read16(MCP9808_MANUF);
@@ -53,6 +52,9 @@ bool MCP9808::begin(uint8_t addr)
     {
         return false;
     }
+
+    /* Highest resolution */
+    write16(MCP9808_RESOLUTION, MMA8451_RESOLUTION_0_0625);
 
     /* Shutdown mode */
     write16(MCP9808_CONFIG, MCP9808_CONFIG_SHDN);
@@ -68,6 +70,7 @@ void MCP9808::wake(void)
     reg &= ~MCP9808_CONFIG_SHDN;
     write16(MCP9808_CONFIG, reg);
 
+    /* Wait for t_conv */
     delay(250);
 
     return;

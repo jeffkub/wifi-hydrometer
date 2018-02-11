@@ -2,17 +2,17 @@
 #include <WiFi.h>
 #include <Wire.h>
 
-#include <Adafruit_SI1145.h>
 #include <ArduinoJson.h>
 #include <MQTTClient.h>
 
 #include "globals.h"
 #include "mcp9808.h"
 #include "mma8451.h"
+#include "si1145.h"
 
 static MCP9808 temp_sensor = MCP9808();
 static MMA8451 accel_sensor = MMA8451();
-static Adafruit_SI1145 light_sensor = Adafruit_SI1145();
+static SI1145 light_sensor = SI1145();
 
 static WiFiClient net;
 static MQTTClient client(512);
@@ -74,10 +74,13 @@ static int readSensors(JsonObject& data)
     data["temp_f"] = temp_sensor.temp_f;
 
     /* Read light sensor */
-    data["light_vis"] = light_sensor.readVisible();
-    data["light_ir"] = light_sensor.readIR();
-    data["light_uv"] = light_sensor.readUV() / 100.0f;
-    /* TODO: Low power mode */
+    light_sensor.wake();
+    light_sensor.read();
+    light_sensor.shutdown();
+
+    data["light_vis"] = light_sensor.vis;
+    data["light_ir"] = light_sensor.ir;
+    data["light_uv"] = light_sensor.uv; //readUV() / 100.0f;
 
     /* Read accelerometer sensor */
     accel_sensor.wake();

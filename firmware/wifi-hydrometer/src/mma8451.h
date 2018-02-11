@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "sensor.h"
+
 #define MMA8451_DEFAULT_ADDRESS         0x1D
 
 #define MMA8451_OUT_X_MSB               0x01
@@ -66,18 +68,19 @@ typedef enum
     MMA8451_MODS_MASK                   = 0b11
 } mma8451_mods_t;
 
-class MMA8451
+class MMA8451 : public Sensor
 {
 public:
-    MMA8451(void);
+    MMA8451(uint8_t addr = MMA8451_DEFAULT_ADDRESS);
 
-    bool begin(uint8_t addr = MMA8451_DEFAULT_ADDRESS);
+    virtual bool begin(void);
 
-    void wake(void);
-    void shutdown(void);
+    virtual void wake(void);
+    virtual void shutdown(void);
 
-    void read(void);
+    virtual void read(void);
 
+    /* Last sensor readings */
     float x_g;
     float y_g;
     float z_g;

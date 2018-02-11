@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "sensor.h"
+
 #define MCP9808_DEFAULT_ADDRESS         0x18
 
 #define MCP9808_CONFIG                  0x01
@@ -12,6 +14,7 @@
 #define MCP9808_AMBIENT_TEMP            0x05
 #define MCP9808_MANUF                   0x06
 #define MCP9808_DEV                     0x07
+#define MCP9808_RESOLUTION              0x08
 
 #define MCP9808_CONFIG_ALERTMOD         (1 << 0)
 #define MCP9808_CONFIG_ALERTPOL         (1 << 1)
@@ -32,18 +35,29 @@
 #define MCP9808_DEV_ID_MASK             (0xFF << 8)
 #define MCP9808_DEV_REV_MASK            (0xFF << 0)
 
-class MCP9808
+typedef enum
+{
+    MMA8451_RESOLUTION_0_5      = 0b00,
+    MMA8451_RESOLUTION_0_25     = 0b01,
+    MMA8451_RESOLUTION_0_125    = 0b10,
+    MMA8451_RESOLUTION_0_0625   = 0b11,
+
+    MMA8451_RESOLUTION_MASK     = 0b11
+} mcp9808_resolution_t;
+
+class MCP9808 : public Sensor
 {
 public:
-    MCP9808(void);
+    MCP9808(uint8_t addr = MCP9808_DEFAULT_ADDRESS);
 
-    bool begin(uint8_t addr = MCP9808_DEFAULT_ADDRESS);
+    virtual bool begin(void);
 
-    void wake(void);
-    void shutdown(void);
+    virtual void wake(void);
+    virtual void shutdown(void);
 
-    void read(void);
+    virtual void read(void);
 
+    /* Last sensor readings */
     float temp_c;
     float temp_f;
 

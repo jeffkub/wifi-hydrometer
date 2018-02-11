@@ -21,20 +21,18 @@ uint8_t MMA8451::read8(uint8_t reg)
     Wire.endTransmission(false);
 
     Wire.requestFrom(_i2caddr, (uint8_t)1);
-    if(!Wire.available()) return -1;
     return Wire.read();
 }
 
-MMA8451::MMA8451(void)
+MMA8451::MMA8451(uint8_t addr) :
+    _i2caddr(addr)
 {
     return;
 }
 
-bool MMA8451::begin(uint8_t addr)
+bool MMA8451::begin(void)
 {
     uint8_t device_id;
-
-    _i2caddr = addr;
 
     /* Check connection */
     device_id = read8(MMA8451_WHOAMI);
@@ -69,7 +67,7 @@ void MMA8451::wake(void)
     reg |= MMA8451_CTRL_REG1_ACTIVE;
     write8(MMA8451_CTRL_REG1, reg);
 
-    /* Wait for valid data */
+    /* Wait for t_on1 */
     delay(500);
 
     return;
