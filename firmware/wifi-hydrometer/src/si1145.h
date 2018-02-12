@@ -44,12 +44,21 @@
 #define SI1145_PART_ID_SI1145               0x45
 
 /* Commands */
+#define SI1145_COMMAND_PARAM_QUERY          0x80
+#define SI1145_COMMAND_PARAM_SET            0xA0
 #define SI1145_COMMAND_NOP                  0x00
 #define SI1145_COMMAND_RESET                0x01
 #define SI1145_COMMAND_BUSADDR              0x02
 #define SI1145_COMMAND_PS_FORCE             0x05
-#define SI1145_COMMAND_PARAM_QUERY          0x80
-#define SI1145_COMMAND_PARAM_SET            0xA0
+#define SI1145_COMMAND_GET_CAL              0x12
+#define SI1145_COMMAND_ALS_FORCE            0x06
+#define SI1145_COMMAND_PSALS_FORCE          0x07
+#define SI1145_COMMAND_PS_PAUSE             0x09
+#define SI1145_COMMAND_ALS_PAUSE            0x0A
+#define SI1145_COMMAND_PSALS_PAUSE          0x0B
+#define SI1145_COMMAND_PSAUTO               0x0D
+#define SI1145_COMMAND_ALS_AUTO             0x0E
+#define SI1145_COMMAND_PSALS_AUTO           0x0F
 
 /* Parameter RAM offsets */
 #define SI1145_PARAM_I2C_ADDR               0x00
