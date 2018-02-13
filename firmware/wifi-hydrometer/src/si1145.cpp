@@ -50,6 +50,44 @@ uint8_t SI1145::readParam(uint8_t param)
     return read8(SI1145_PARAM_RD);
 }
 
+int SI1145::command(uint8_t cmd)
+{
+    uint8_t resp;
+    unsigned int retry;
+
+    /* Clear the response register */
+    write8(SI1145_COMMAND, SI1145_COMMAND_NOP);
+    resp = read8(SI1145_RESPONSE);
+    if(resp)
+    {
+        return -1;
+    }
+
+    /* Write the command */
+    write8(SI1145_COMMAND, cmd);
+
+    /* Wait for response */
+    for(retry = 0; retry < 25; retry++)
+    {
+        delay(1);
+
+        resp = read8(SI1145_RESPONSE);
+        if(resp & 0xF0)
+        {
+            /* An error has ocurred */
+            return -1;
+        }
+        else if(resp)
+        {
+            /* Success */
+            return 0;
+        }
+    }
+
+    /* Timeout */
+    return -1;
+}
+
 SI1145::SI1145(uint8_t addr) :
     _i2caddr(addr)
 {
@@ -114,9 +152,10 @@ void SI1145::shutdown(void)
 void SI1145::read(void)
 {
     /* Force measurement */
-    write8(SI1145_COMMAND, SI1145_COMMAND_ALS_FORCE);
-
-    /* TODO: do we need a delay? */
+    if(command(SI1145_COMMAND_ALS_FORCE))
+    {
+        return;
+    }
 
     /* Read measurement results */
     vis = (float)read16(SI1145_ALS_VIS_DATA0); /* TODO: scale to lux */

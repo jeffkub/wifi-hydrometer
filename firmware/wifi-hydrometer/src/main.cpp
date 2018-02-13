@@ -80,7 +80,7 @@ static int readSensors(JsonObject& data)
 
     data["light_vis"] = light_sensor.vis;
     data["light_ir"] = light_sensor.ir;
-    data["light_uv"] = light_sensor.uv; //readUV() / 100.0f;
+    data["light_uv"] = light_sensor.uv;
 
     /* Read accelerometer sensor */
     accel_sensor.wake();

@@ -137,6 +137,8 @@ private:
     uint8_t writeParam(uint8_t param, uint8_t value);
     uint8_t readParam(uint8_t param);
 
+    int command(uint8_t cmd);
+
     uint8_t _i2caddr;
 };
 
