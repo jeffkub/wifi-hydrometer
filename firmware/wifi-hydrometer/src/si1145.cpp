@@ -60,17 +60,19 @@ bool SI1145::begin(void)
 {
     uint8_t part_id;
 
+    /* Check connection */
     part_id = read8(SI1145_PART_ID);
     if(part_id != SI1145_PART_ID_SI1145)
     {
         return false;
     }
 
+    /* Reset device */
     write8(SI1145_COMMAND, SI1145_COMMAND_RESET);
     delay(10);
 
-    write8(SI1145_HW_KEY, 0x17);
-    delay(10);
+    /* Write HW key for proper operation */
+    write8(SI1145_HW_KEY, SI1145_HW_KEY_VAL);
 
     /* Enable UV index measurement coefficients */
     write8(SI1145_UCOEF0, 0x29);
@@ -84,20 +86,42 @@ bool SI1145::begin(void)
         SI1145_PARAM_CHLIST_EN_ALS_IR |
         SI1145_PARAM_CHLIST_EN_ALS_VIS);
 
+    /* Ambient light sensor params */
+    writeParam(SI1145_PARAM_ALS_IR_ADCMUX, SI1145_PARAM_ALS_IR_ADCMUX_SMALLIR);
+    writeParam(SI1145_PARAM_ALS_IR_ADC_COUNTER, SI1145_PARAM_ALS_ADC_COUNTER_511);
+    writeParam(SI1145_PARAM_ALS_IR_ADC_GAIN, SI1145_PARAM_ALS_ADC_GAIN_DIV1);
+    writeParam(SI1145_PARAM_ALS_IR_ADC_MISC, SI1145_PARAM_ALS_ADC_MISC_HIRANGE);
+
+    writeParam(SI1145_PARAM_ALS_VIS_ADC_COUNTER, SI1145_PARAM_ALS_ADC_COUNTER_511);
+    writeParam(SI1145_PARAM_ALS_VIS_ADC_GAIN, SI1145_PARAM_ALS_ADC_GAIN_DIV1);
+    writeParam(SI1145_PARAM_ALS_VIS_ADC_MISC, SI1145_PARAM_ALS_ADC_MISC_HIRANGE);
+
     return true;
 }
 
 void SI1145::wake(void)
 {
+    /* Nothing to do */
     return;
 }
 
 void SI1145::shutdown(void)
 {
+    /* Nothing to do */
     return;
 }
 
 void SI1145::read(void)
 {
+    /* Force measurement */
+    write8(SI1145_COMMAND, SI1145_COMMAND_ALS_FORCE);
+
+    /* TODO: do we need a delay? */
+
+    /* Read measurement results */
+    vis = (float)read16(SI1145_ALS_VIS_DATA0); /* TODO: scale to lux */
+    ir = (float)read16(SI1145_ALS_IR_DATA0); /* TODO: scale to lux */
+    uv = (float)read16(SI1145_AUX_DATA0) / 100.0f;
+
     return;
 }

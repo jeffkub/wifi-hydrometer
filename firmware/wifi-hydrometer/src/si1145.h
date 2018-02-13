@@ -5,7 +5,7 @@
 
 #include "sensor.h"
 
-#define SI1145_DEFAULT_ADDRESS          0x60
+#define SI1145_DEFAULT_ADDRESS              0x60
 
 /* Register addresses */
 #define SI1145_PART_ID                      0x00
@@ -42,6 +42,8 @@
 #define SI1145_CHIP_STAT                    0x30
 
 #define SI1145_PART_ID_SI1145               0x45
+
+#define SI1145_HW_KEY_VAL                   0x17
 
 /* Commands */
 #define SI1145_COMMAND_NOP                  0x00
@@ -90,6 +92,24 @@
 #define SI1145_PARAM_CHLIST_EN_ALS_IR       (1 << 5)
 #define SI1145_PARAM_CHLIST_EN_AUX          (1 << 6)
 #define SI1145_PARAM_CHLIST_EN_UV           (1 << 7)
+
+#define SI1145_PARAM_ALS_IR_ADCMUX_SMALLIR  (0x00 << 0)
+#define SI1145_PARAM_ALS_IR_ADCMUX_LARGEIR  (0x03 << 0)
+
+#define SI1145_PARAM_ALS_ADC_COUNTER_1      (0b000 << 4)
+#define SI1145_PARAM_ALS_ADC_COUNTER_7      (0b001 << 4)
+#define SI1145_PARAM_ALS_ADC_COUNTER_15     (0b010 << 4)
+#define SI1145_PARAM_ALS_ADC_COUNTER_31     (0b011 << 4)
+#define SI1145_PARAM_ALS_ADC_COUNTER_63     (0b100 << 4)
+#define SI1145_PARAM_ALS_ADC_COUNTER_127    (0b101 << 4)
+#define SI1145_PARAM_ALS_ADC_COUNTER_255    (0b110 << 4)
+#define SI1145_PARAM_ALS_ADC_COUNTER_511    (0b111 << 4)
+
+#define SI1145_PARAM_ALS_ADC_GAIN_DIV1      (0x0 << 0)
+#define SI1145_PARAM_ALS_ADC_GAIN_DIV16     (0x4 << 0)
+#define SI1145_PARAM_ALS_ADC_GAIN_DIV64     (0x6 << 0)
+
+#define SI1145_PARAM_ALS_ADC_MISC_HIRANGE   (1 << 5)
 
 class SI1145 : public Sensor
 {
