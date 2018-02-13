@@ -22,6 +22,7 @@ static DynamicJsonBuffer json_buffer;
 RTC_DATA_ATTR unsigned long last_run_time = 0;
 RTC_DATA_ATTR unsigned int wifi_conn_fail = 0;
 RTC_DATA_ATTR unsigned int mqtt_conn_fail = 0;
+RTC_DATA_ATTR unsigned int sensor_init_flag = 0;
 
 static int initSensors(void);
 static int readSensors(JsonObject& data);
@@ -37,6 +38,14 @@ static int initSensors(void)
     analogSetCycles(127);
 
     Wire.begin(SDA_PIN, SCL_PIN);
+
+    /* Initialize sensors on first boot only */
+    if(sensor_init_flag)
+    {
+        return 0;
+    }
+
+    LOG("Initializing sensors\n");
 
     if(!temp_sensor.begin())
     {
@@ -55,6 +64,9 @@ static int initSensors(void)
         LOG("Failed to init SI1145\n");
         return -1;
     }
+
+    /* Mark sensors as initialized */
+    sensor_init_flag = 1;
 
     return 0;
 }
@@ -190,7 +202,7 @@ static int connectToWiFi(const String& ssid, const String& pass)
 
     for(retry = 0; retry < 3; retry++)
     {
-        LOG("Connecting to %s\n", ssid);
+        LOG("Connecting to %s\n", ssid.c_str());
 
         WiFi.begin(ssid.c_str(), pass.c_str());
         if(WiFi.waitForConnectResult() == WL_CONNECTED)
