@@ -158,8 +158,8 @@ void SI1145::read(void)
     }
 
     /* Read measurement results */
-    vis = (float)read16(SI1145_ALS_VIS_DATA0); /* TODO: scale to lux */
-    ir = (float)read16(SI1145_ALS_IR_DATA0); /* TODO: scale to lux */
+    vis = (float)read16(SI1145_ALS_VIS_DATA0) /  0.282f / 14.5f;
+    ir = (float)read16(SI1145_ALS_IR_DATA0) /  2.44f / 14.5f;
     uv = (float)read16(SI1145_AUX_DATA0) / 100.0f;
 
     return;

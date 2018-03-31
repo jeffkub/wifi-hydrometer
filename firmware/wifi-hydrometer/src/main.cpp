@@ -256,7 +256,7 @@ static int publishData(const String& topic, JsonObject& data)
     LOG("  topic:   %s\n", topic.c_str());
     LOG("  payload: %s\n", payload.c_str());
 
-    if(!client.publish(topic, payload))
+    if(!client.publish(topic, payload, true, LWMQTT_QOS2))
     {
         LOG("failed. lastError = %d\n", client.lastError());
         return -1;

@@ -5,11 +5,11 @@
 #define WIFI_SSID         "ssid"
 #define WIFI_PASS         "password"
 
-#define MQTT_SERVER       "things.ubidots.com"
+#define MQTT_SERVER       "raspberrypi"
 #define MQTT_PORT         1883
-#define MQTT_USER         ""
-#define MQTT_PASS         ""
-#define MQTT_TOPIC_BASE   "/v1.6/devices/"
+#define MQTT_USER         "user"
+#define MQTT_PASS         "pass"
+#define MQTT_TOPIC_BASE   "brewing/hydrometer/"
 
 /* Pin definitions */
 #define LED_PIN           13
@@ -23,7 +23,7 @@
 /* ADC conversion constant */
 #define BAT_ADC_SCALE ((1.1f / 4095.0f) * ((220.0f + 1000.0f) / 220.0f))
 
-#define TIME_TO_SLEEP_US (5 * 60 * 1000000)
+#define TIME_TO_SLEEP_US (4ULL * 60ULL * 60ULL * 1000000ULL)
 
 #define LOG(format, ...) \
   { \
