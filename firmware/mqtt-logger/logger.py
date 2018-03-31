@@ -5,8 +5,7 @@ import json
 import re
 import sqlite3
 
-import daemon
-import lockfile
+from daemonize import Daemonize
 import paho.mqtt.client as mqtt
 
 MQTT_TOPIC_BASE = 'brewing/hydrometer/'
@@ -106,7 +105,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--daemon', action='store_true',
                         help='run as a daemon')
-    parser.add_argument('--pidfile',
+    parser.add_argument('--pidfile', default=None,
                         help='pid file')
     parser.add_argument('--db', default='data.db',
                         help='database file')
@@ -118,10 +117,8 @@ def main():
 
     if(args.daemon):
         # Start as a daemon
-        with daemon.DaemonContext(
-            pidfile=lockfile.FileLock(args.pidfile) if args.pidfile else None
-        ):
-            logger(args)
+        daemon = Daemonize(app='mqtt-logger', pid=args.pidfile, action=lambda: logger(args))
+        daemon.start()
     else:
         logger(args)
 
