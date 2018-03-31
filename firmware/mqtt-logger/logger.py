@@ -117,7 +117,8 @@ def main():
 
     if(args.daemon):
         # Start as a daemon
-        daemon = Daemonize(app='mqtt-logger', pid=args.pidfile, action=lambda: logger(args))
+        daemon = Daemonize(app='mqtt-logger', pid=args.pidfile,
+                           action=lambda: logger(args))
         daemon.start()
     else:
         logger(args)
