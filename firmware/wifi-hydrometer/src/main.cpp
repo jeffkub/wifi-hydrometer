@@ -248,7 +248,7 @@ static int publishData(const String& topic_base, JsonObject& data)
 
     data["wifi_conn_fail"] = wifi_conn_fail;
     data["mqtt_conn_fail"] = mqtt_conn_fail;
-    data["last_run_time"]  = last_run_time;
+    data["last_run_time"]  = (float)last_run_time / 1000000.0f;
 
     data.printTo(payload);
 

@@ -22,7 +22,8 @@ def init_db():
     c.execute('''
         CREATE TABLE IF NOT EXISTS devices(
             id INTEGER PRIMARY KEY,
-            name TEXT UNIQUE
+            name TEXT UNIQUE,
+            cur_session INTEGER DEFAULT 0
         )
     ''')
 
@@ -30,6 +31,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS log(
             id INTEGER PRIMARY KEY,
             device INTEGER,
+            session INTEGER,
             bat_v REAL,
             temp_f REAL,
             light_vis REAL,
@@ -61,10 +63,16 @@ def log_data(device, data):
     ''', {'device': device})
 
     c.execute('''
-        INSERT INTO log( device, bat_v, temp_f, light_vis, light_ir, light_uv,
+        INSERT INTO log(
+            device, session,
+            bat_v, temp_f,
+            light_vis, light_ir, light_uv,
             accel_x, accel_y, accel_z, tilt,
             wifi_conn_fail, mqtt_conn_fail, last_run_time )
-        SELECT id, :bat_v, :temp_f, :light_vis, :light_ir, :light_uv,
+        SELECT
+            id, cur_session,
+            :bat_v, :temp_f,
+            :light_vis, :light_ir, :light_uv,
             :accel_x, :accel_y, :accel_z, :tilt,
             :wifi_conn_fail, :mqtt_conn_fail, :last_run_time
         FROM devices WHERE name=:device
