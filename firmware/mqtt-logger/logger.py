@@ -6,6 +6,7 @@ import re
 import sqlite3
 
 import daemon
+import lockfile
 import paho.mqtt.client as mqtt
 
 MQTT_TOPIC_BASE = 'brewing/hydrometer/'
@@ -95,7 +96,7 @@ def logger(args):
     client = mqtt.Client(userdata=db)
     client.on_message = on_message
 
-    client.connect(args.mqtt_host, args.mqtt_port, 60)
+    client.connect(args.host, args.port, 60)
     client.subscribe(MQTT_TOPIC_BASE + '+/json', 2)
 
     client.loop_forever()
@@ -105,17 +106,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--daemon', action='store_true',
                         help='run as a daemon')
+    parser.add_argument('--pidfile',
+                        help='pid file')
     parser.add_argument('--db', default='data.db',
                         help='database file')
-    parser.add_argument('--mqtt_host', default='localhost',
+    parser.add_argument('--host', default='localhost',
                         help='hostname or IP address of the remote broker')
-    parser.add_argument('--mqtt_port', type=int, default=1883,
+    parser.add_argument('--port', type=int, default=1883,
                         help='network port of the remote broker')
     args = parser.parse_args()
 
     if(args.daemon):
         # Start as a daemon
-        with daemon.DaemonContext():
+        with daemon.DaemonContext(
+            pidfile=lockfile.FileLock(args.pidfile) if args.pidfile else None
+        ):
             logger(args)
     else:
         logger(args)
