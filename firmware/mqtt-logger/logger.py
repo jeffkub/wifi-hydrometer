@@ -8,11 +8,11 @@ import paho.mqtt.client as mqtt
 
 DB_FILE = 'data.db'
 
-MQTT_SERVER = 'raspberrypi'
+MQTT_SERVER = 'mqttpi.rawr.lan'
 MQTT_PORT = 1883
 MQTT_TOPIC_BASE = 'brewing/hydrometer/'
 
-hydro_topic = re.compile(MQTT_TOPIC_BASE + '(.*)')
+hydro_json_re = re.compile(MQTT_TOPIC_BASE + '(.*)/json')
 
 
 def init_db():
@@ -41,7 +41,7 @@ def init_db():
             tilt REAL,
             wifi_conn_fail INTEGER,
             mqtt_conn_fail INTEGER,
-            last_run_time INTEGER,
+            last_run_time REAL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(device) REFERENCES devices(id)
         )
@@ -77,7 +77,7 @@ def log_data(device, data):
 def on_message(client, userdata, msg):
     print(msg.topic + ' ' + str(msg.payload))
 
-    match = hydro_topic.match(msg.topic)
+    match = hydro_json_re.match(msg.topic)
     if match:
         device = match.group(1)
         payload = json.loads(msg.payload.decode())
@@ -91,7 +91,7 @@ def main():
     client.on_message = on_message
 
     client.connect(MQTT_SERVER, MQTT_PORT, 60)
-    client.subscribe(MQTT_TOPIC_BASE + '#', 2)
+    client.subscribe(MQTT_TOPIC_BASE + '+/json', 2)
 
     client.loop_forever()
 

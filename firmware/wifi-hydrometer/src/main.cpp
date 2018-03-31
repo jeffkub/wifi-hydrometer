@@ -29,7 +29,7 @@ static int readSensors(JsonObject& data);
 static void wifiEvent(system_event_id_t event, system_event_info_t info);
 static int connectToWiFi(const String& ssid, const String& pass);
 static int connectToServer(const String& ip, uint16_t port, const String& client_id, const String& user, const String& pass);
-static int publishData(const String& topic, JsonObject& data);
+static int publishData(const String& topic_base, JsonObject& data);
 
 static int initSensors(void)
 {
@@ -242,7 +242,7 @@ static int connectToServer(const String& ip, uint16_t port, const String& client
     return -1;
 }
 
-static int publishData(const String& topic, JsonObject& data)
+static int publishData(const String& topic_base, JsonObject& data)
 {
     String payload;
 
@@ -253,10 +253,22 @@ static int publishData(const String& topic, JsonObject& data)
     data.printTo(payload);
 
     LOG("Publishing sensor data\n");
-    LOG("  topic:   %s\n", topic.c_str());
-    LOG("  payload: %s\n", payload.c_str());
+    LOG("  topic_base: %s\n", topic_base.c_str());
+    LOG("  payload:    %s\n", payload.c_str());
 
-    if(!client.publish(topic, payload, true, LWMQTT_QOS2))
+    if(!client.publish(topic_base + "/json", payload, false, LWMQTT_QOS2))
+    {
+        LOG("failed. lastError = %d\n", client.lastError());
+        return -1;
+    }
+
+    if(!client.publish(topic_base + "/bat_v", data["bat_v"], true, LWMQTT_QOS1))
+    {
+        LOG("failed. lastError = %d\n", client.lastError());
+        return -1;
+    }
+
+    if(!client.publish(topic_base + "/tilt", data["tilt"], true, LWMQTT_QOS1))
     {
         LOG("failed. lastError = %d\n", client.lastError());
         return -1;
@@ -300,7 +312,7 @@ void setup()
         goto sleep;
     }
 
-    publishData(MQTT_TOPIC_BASE + WiFi.macAddress(), sensor_data);
+    publishData(MQTT_TOPIC_BASE, sensor_data);
 
 sleep:
     LOG("Disconnecting\n");

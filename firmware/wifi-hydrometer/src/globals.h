@@ -5,11 +5,11 @@
 #define WIFI_SSID         "ssid"
 #define WIFI_PASS         "password"
 
-#define MQTT_SERVER       "raspberrypi"
+#define MQTT_SERVER       "mqttpi.rawr.lan"
 #define MQTT_PORT         1883
 #define MQTT_USER         "user"
 #define MQTT_PASS         "pass"
-#define MQTT_TOPIC_BASE   "brewing/hydrometer/"
+#define MQTT_TOPIC_BASE   "brewing/hydrometer/hydro1"
 
 /* Pin definitions */
 #define LED_PIN           13
