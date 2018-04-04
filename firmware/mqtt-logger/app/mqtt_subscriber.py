@@ -1,7 +1,7 @@
 import json
 import re
 
-from app import db, mqtt
+from app import app, db, mqtt
 from app.models import Device, Log
 
 hydro_json_re = re.compile('brewing/hydrometer/(.*)/json')
@@ -14,7 +14,7 @@ def handle_connect(client, userdata, flags, rc):
 
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
-    print(message.topic + ' ' + message.payload.decode())
+    app.logger.info(message.topic + ' ' + message.payload.decode())
 
     match = hydro_json_re.match(message.topic)
     if match:

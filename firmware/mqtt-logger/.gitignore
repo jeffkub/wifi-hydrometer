@@ -1,5 +1,7 @@
 *.db
 *.pyc
 
+.idea/
+logs/
 venv/
 !migrations/versions/*
