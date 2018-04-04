@@ -12,14 +12,4 @@ migrate = Migrate(app, db)
 mqtt = Mqtt(app)
 
 
-from app import routes, models
-
-
-@mqtt.on_connect()
-def handle_connect(client, userdata, flags, rc):
-    mqtt.subscribe('brewing/hydrometer/+/json')
-
-
-@mqtt.on_message()
-def handle_mqtt_message(client, userdata, message):
-    print(message.topic + ' ' + message.payload.decode())
+from app import routes, models, mqtt_subscriber
