@@ -4,12 +4,13 @@ import re
 from app import app, db, mqtt
 from app.models import Device, Log
 
-hydro_json_re = re.compile('brewing/hydrometer/(.*)/json')
+hydro_json_topic = 'brewing/hydrometer/+/json'
+hydro_json_re = re.compile(hydro_json_topic.replace('+', '(.*)'))
 
 
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
-    mqtt.subscribe('brewing/hydrometer/+/json')
+    mqtt.subscribe(hydro_json_topic)
 
 
 @mqtt.on_message()
