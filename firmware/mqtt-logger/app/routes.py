@@ -6,6 +6,12 @@ from app.models import Device
 @app.route('/')
 @app.route('/index')
 def index():
-    device = Device.query.filter_by(name='test').first_or_404()
+    devices = Device.query.all()
+    return render_template('index.html', devices=devices)
+
+
+@app.route('/device/<name>')
+def device(name):
+    device = Device.query.filter_by(name=name).first_or_404()
     logs = device.logs.all()
-    return render_template('index.html', device=device, logs=logs)
+    return render_template('device.html', device=device, logs=logs)

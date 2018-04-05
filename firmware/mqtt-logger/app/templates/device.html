@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <title>MQTT Logger</title>
+    </head>
+    <body>
+        <h1>Device: {{ device.name }}</h1>
+
+        <table>
+            <tr>
+                <th>Timestamp</th>
+                <th>Battery [V]</th>
+                <th>Temp [F]</th>
+                <th>WiFi Conn Failures</th>
+                <th>MQTT Conn Failures</th>
+                <th>Last Run Time [s]</th>
+            </tr>
+
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.timestamp }}</td>
+                <td>{{ log.bat_v }}</td>
+                <td>{{ log.temp_f }}</td>
+                <td>{{ log.wifi_conn_fail }}</td>
+                <td>{{ log.mqtt_conn_fail }}</td>
+                <td>{{ log.last_run_time }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
