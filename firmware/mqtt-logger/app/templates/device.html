@@ -26,5 +26,9 @@
             </tr>
             {% endfor %}
         </table>
+
+        <div>
+            {{ chart.render()|safe }}
+        </div>
     </body>
 </html>

@@ -2,5 +2,6 @@ Flask
 Flask-SQLAlchemy
 Flask-Migrate
 Flask-MQTT
+pygal
 
 gunicorn
